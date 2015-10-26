@@ -7,6 +7,8 @@ namespace ApimEventProcessor
     public class ConsoleLogger : ILogger
     {
         private LogLevel _LogLevel;
+        private readonly object _writerLock = new object();
+
 
         public ConsoleLogger(LogLevel logLevel = LogLevel.Info)
         {
@@ -15,32 +17,43 @@ namespace ApimEventProcessor
         public void LogDebug(string message, params object[] parameters)
         {
             if (_LogLevel > LogLevel.Debug) return;
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(string.Format(message, parameters));
-            Console.ForegroundColor = ConsoleColor.White;
+            WriteLine(ConsoleColor.Green, message, parameters);
         }
-
+     
         public void LogInfo(string message, params object[] parameters)
         {
             if (_LogLevel > LogLevel.Info) return;
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine(string.Format(message, parameters));
-            Console.ForegroundColor = ConsoleColor.White;
+            WriteLine(ConsoleColor.Yellow, message, parameters);
         }
 
         public void LogWarning(string message, params object[] parameters)
         {
             if (_LogLevel > LogLevel.Warning) return;
-            Console.ForegroundColor = ConsoleColor.Blue;
-            Console.WriteLine(string.Format(message, parameters));
-            Console.ForegroundColor = ConsoleColor.White;
+            WriteLine(ConsoleColor.Blue, message, parameters);
         }
 
         public void LogError(string message, params object[] parameters)
         {
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine(string.Format(message, parameters));
-            Console.ForegroundColor = ConsoleColor.White;
+            WriteLine(ConsoleColor.Magenta, message, parameters);
         }
+
+        private void WriteLine(ConsoleColor color, string message, object[] parameters)
+        {
+            lock (_writerLock)
+            {
+                var currentColor = Console.ForegroundColor;
+                try
+                {
+                    currentColor = Console.ForegroundColor;
+                    Console.ForegroundColor = color;
+                    Console.WriteLine(string.Format(message, parameters));
+                }
+                finally
+                {
+                    Console.ForegroundColor = currentColor;
+                }
+            }
+        }
+
     }
 }
