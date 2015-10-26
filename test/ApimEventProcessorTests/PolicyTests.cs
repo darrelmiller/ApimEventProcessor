@@ -15,16 +15,24 @@ namespace ApimEventProcessorTests
 
         private static string SendRequestToEventHub(Context context)
         {
-            var requestLine = string.Format("{0} {1} HTTP/1.1\r\n", context.Request.Method, context.Request.Url.Path + context.Request.Url.QueryString);
+            var requestLine = string.Format("{0} {1} HTTP/1.1\r\n", 
+                                                        context.Request.Method, 
+                                                        context.Request.Url.Path + context.Request.Url.QueryString);
+
             var body = context.Request.Body?.As<string>(true);
             if (body != null && body.Length > 1024)
             {
                 body = body.Substring(0, 1024);
             }
 
-            var headers = context.Request.Headers.Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value))).ToArray<string>();
+            var headers = context.Request.Headers
+                                        .Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value)))
+                                        .ToArray<string>();
+
             var headerString = (headers.Any()) ? string.Join("\r\n", headers) + "\r\n" : string.Empty;
-            return "request:" + context.Variables["message-id"] + "\n" + requestLine + headerString + "\r\n" + body; ;
+
+            return "request:"   + context.Variables["message-id"] + "\n" 
+                                + requestLine + headerString + "\r\n" + body; 
         }
 
 
