@@ -42,7 +42,7 @@ namespace ApimEventProcessor
     public class ApimEventProcessor : IEventProcessor
     {
         Stopwatch checkpointStopWatch;
-        private ConcurrentQueue<string> _Queue = new ConcurrentQueue<string>();
+        private Queue<string> _Queue = new Queue<string>();
         private Task _DequeueTask;
         private bool _running = true;
         private ILogger _Logger;
@@ -62,6 +62,9 @@ namespace ApimEventProcessor
             foreach (EventData eventData in messages)
             {
                 string message = Encoding.UTF8.GetString(eventData.GetBytes());
+
+                var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+
                 _Queue.Enqueue(message);
 
                 _Logger.LogInfo(string.Format("Event received from partition: '{0}'", context.Lease.PartitionId));
@@ -84,11 +87,8 @@ namespace ApimEventProcessor
             {
                 if (_Queue.Count > 0)
                 {
-                    string message;
-                    if (_Queue.TryDequeue(out message))
-                    {
-                        ProcessEvent(message).Wait();
-                    }
+                    string message = _Queue.Dequeue();
+                    ProcessEvent(message).Wait();
                 }
                 else
                 {
