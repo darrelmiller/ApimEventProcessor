@@ -63,8 +63,6 @@ namespace ApimEventProcessor
             {
                 string message = Encoding.UTF8.GetString(eventData.GetBytes());
 
-                var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
-
                 _Queue.Enqueue(message);
 
                 _Logger.LogInfo(string.Format("Event received from partition: '{0}'", context.Lease.PartitionId));
@@ -102,9 +100,9 @@ namespace ApimEventProcessor
         /// <summary>
         /// Process Queued Message
         /// </summary>
-        /// <param name="data"></param>
+        /// <param name="message"></param>
         /// <returns></returns>
-        private async Task ProcessEvent(string data)
+        private async Task ProcessEvent(string message)
         {
             _Logger.LogDebug("Processing Event");
 
@@ -112,7 +110,7 @@ namespace ApimEventProcessor
 
             try {
 
-                httpMessage = HttpMessage.Parse(data);
+                httpMessage = HttpMessage.Parse(message);
 
             } catch(ArgumentException ex)
             {
