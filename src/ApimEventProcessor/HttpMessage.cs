@@ -20,6 +20,15 @@ namespace ApimEventProcessor
         public HttpRequestMessage HttpRequestMessage { get; set; }
         public HttpResponseMessage HttpResponseMessage { get; set; }
 
+
+        public static HttpMessage Parse(Stream stream)
+        {
+            using (var sr = new StreamReader(stream))
+            {
+                return Parse(sr.ReadToEnd());
+            }
+        }
+
         public static HttpMessage Parse(string data)
         {
             var httpMessage = new HttpMessage();

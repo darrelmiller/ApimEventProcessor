@@ -56,18 +56,17 @@ namespace ApimEventProcessor
 
             foreach (EventData eventData in messages)
             {
-                string message = Encoding.UTF8.GetString(eventData.GetBytes());
-
-                _Logger.LogInfo(string.Format("Event received from partition: '{0}'", context.Lease.PartitionId));
+                _Logger.LogInfo(string.Format("Event received from partition: {0} - {1}", context.Lease.PartitionId,eventData.PartitionKey));
 
                 try
                 {
-                    await ProcessEvent(message);
-                } catch (Exception ex)
+                    var httpMessage = HttpMessage.Parse(eventData.GetBodyStream());
+                    await _MessageContentProcessor.ProcessHttpMessage(httpMessage);
+                }
+                catch (Exception ex)
                 {
                     _Logger.LogError(ex.Message);
                 }
-
             }
 
             //Call checkpoint every 5 minutes, so that worker can resume processing from the 5 minutes back if it restarts.
@@ -88,19 +87,7 @@ namespace ApimEventProcessor
         private async Task ProcessEvent(string message)
         {
          
-            HttpMessage httpMessage;
-
-            try {
-
-                httpMessage = HttpMessage.Parse(message);
-
-            } catch(ArgumentException ex)
-            {
-                _Logger.LogError(ex.Message);
-                return;
-            }
-            
-            await _MessageContentProcessor.ProcessHttpMessage(httpMessage);
+           
 
         }
 

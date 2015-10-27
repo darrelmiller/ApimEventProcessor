@@ -38,16 +38,24 @@ namespace ApimEventProcessorTests
 
         private static string SendResponseToEventHub(Context context)
         {
-            var statusLine = string.Format("HTTP/1.1 {0} {1}\r\n", context.Response.StatusCode, context.Response.StatusReason);
+            var statusLine = string.Format("HTTP/1.1 {0} {1}\r\n", 
+                                                context.Response.StatusCode, 
+                                                context.Response.StatusReason);
 
             var body = context.Response.Body?.As<string>(true);
             if (body != null && body.Length > 1024)
             {
                 body = body.Substring(0, 1024);
             }
-            var headers = context.Response.Headers.Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value))).ToArray<string>();
+
+            var headers = context.Response.Headers
+                                            .Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value)))
+                                            .ToArray<string>();
+
             var headerString = (headers.Any()) ? string.Join("\r\n", headers) + "\r\n" : string.Empty;
-            return "response:" + context.Variables["message-id"] + "\n" + statusLine + headerString + "\r\n" + body;
+
+            return "response:"  + context.Variables["message-id"] + "\n" 
+                                + statusLine + headerString + "\r\n" + body;
         }
 
 
