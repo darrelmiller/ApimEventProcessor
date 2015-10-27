@@ -31,20 +31,20 @@ namespace ApimEventProcessor
 
             if (message.IsRequest)
             {
-                _Logger.LogInfo("Sending HTTP request " + message.MessageId.ToString());
-                runscopeMessage.Request = RunscopeRequest.CreateFromAsync(message.HttpRequestMessage).Result;
+                _Logger.LogInfo("Processing HTTP request " + message.MessageId.ToString());
+                runscopeMessage.Request = await RunscopeRequest.CreateFromAsync(message.HttpRequestMessage);
             }
             else
             {
-                _Logger.LogInfo("Sending HTTP response " + message.MessageId.ToString());
-                runscopeMessage.Response = RunscopeResponse.CreateFromAsync(message.HttpResponseMessage).Result;
+                _Logger.LogInfo("Processing HTTP response " + message.MessageId.ToString());
+                runscopeMessage.Response = await RunscopeResponse.CreateFromAsync(message.HttpResponseMessage);
             }
 
             var messagesLink = new MessagesLink() { Method = HttpMethod.Post };
             messagesLink.BucketKey = _BucketKey;
             messagesLink.RunscopeMessage = runscopeMessage;
             var runscopeResponse = await _HttpClient.SendAsync(messagesLink.CreateRequest());
-            _Logger.LogDebug("Request sent to Runscope");
+            _Logger.LogDebug("Message forwarded to Runscope");
         }
     }
 }
