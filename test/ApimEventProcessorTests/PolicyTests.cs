@@ -26,6 +26,7 @@ namespace ApimEventProcessorTests
             }
 
             var headers = context.Request.Headers
+                                        .Where(h => h.Key != "Authorization" && h.Key != "Ocp-Apim-Subscription-Key")
                                         .Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value)))
                                         .ToArray<string>();
 
