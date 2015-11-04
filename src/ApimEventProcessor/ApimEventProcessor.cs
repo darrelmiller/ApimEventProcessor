@@ -1,15 +1,8 @@
 ﻿using Microsoft.ServiceBus.Messaging;
-using Runscope.Links;
-using Runscope.Messages;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
+
 using System.Threading.Tasks;
 
 namespace ApimEventProcessor
@@ -78,18 +71,6 @@ namespace ApimEventProcessor
             }
         }
 
-
-        /// <summary>
-        /// Process Queued Message
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        private async Task ProcessEvent(string message)
-        {
-         
-           
-
-        }
 
 
         async Task IEventProcessor.CloseAsync(PartitionContext context, CloseReason reason)

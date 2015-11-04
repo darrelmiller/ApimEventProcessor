@@ -15,10 +15,9 @@ namespace ApimEventProcessorTests
 
         private static string SendRequestToEventHub(Context context)
         {
-            var requestLine = string.Format("{0} {1} HTTP/1.1\r\n", 
-                                                        context.Request.Method, 
-                                                        context.Request.Url.Path + context.Request.Url.QueryString);
-
+            var requestLine = $"{context.Request.Method} {context.Request.Url.Path + context.Request.Url.QueryString} HTTP/1.1\r\n";
+                                                     
+            
             var body = context.Request.Body?.As<string>(true);
             if (body != null && body.Length > 1024)
             {
@@ -27,21 +26,18 @@ namespace ApimEventProcessorTests
 
             var headers = context.Request.Headers
                                         .Where(h => h.Key != "Authorization" && h.Key != "Ocp-Apim-Subscription-Key")
-                                        .Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value)))
+                                        .Select(h => $"{h.Key}: {String.Join(", ", h.Value)}")
                                         .ToArray<string>();
 
             var headerString = (headers.Any()) ? string.Join("\r\n", headers) + "\r\n" : string.Empty;
 
-            return "request:"   + context.Variables["message-id"] + "\n" 
-                                + requestLine + headerString + "\r\n" + body; 
+            return $"request:{context.Variables["message-id"]}\n{requestLine}{headerString}\r\n{body}"; 
         }
 
 
         private static string SendResponseToEventHub(Context context)
         {
-            var statusLine = string.Format("HTTP/1.1 {0} {1}\r\n", 
-                                                context.Response.StatusCode, 
-                                                context.Response.StatusReason);
+            var statusLine = $"HTTP/1.1 {context.Response.StatusCode} {context.Response.StatusReason}\r\n";
 
             var body = context.Response.Body?.As<string>(true);
             if (body != null && body.Length > 1024)
@@ -50,7 +46,7 @@ namespace ApimEventProcessorTests
             }
 
             var headers = context.Response.Headers
-                                            .Select(h => string.Format("{0}: {1}", h.Key, String.Join(", ", h.Value)))
+                                            .Select(h => $"{h.Key}: {String.Join(", ", h.Value)}")
                                             .ToArray<string>();
 
             var headerString = (headers.Any()) ? string.Join("\r\n", headers) + "\r\n" : string.Empty;
