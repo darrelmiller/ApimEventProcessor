@@ -15,10 +15,10 @@ namespace ApimEventProcessor
         public RunscopeHttpMessageProcessor(HttpClient httpClient, ILogger logger)
         {
             _HttpClient = httpClient;
-            var key = Environment.GetEnvironmentVariable("APIMEVENTS-RUNSCOPE-KEY", EnvironmentVariableTarget.User);
+            var key = Environment.GetEnvironmentVariable("APIMEVENTS-RUNSCOPE-KEY", EnvironmentVariableTarget.Process);
             _HttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("bearer", key);
             _HttpClient.BaseAddress = new Uri("https://api.runscope.com");
-            _BucketKey = Environment.GetEnvironmentVariable("APIMEVENTS-RUNSCOPE-BUCKET", EnvironmentVariableTarget.User);
+            _BucketKey = Environment.GetEnvironmentVariable("APIMEVENTS-RUNSCOPE-BUCKET", EnvironmentVariableTarget.Process);
             _Logger = logger;
         }
 
@@ -44,7 +44,13 @@ namespace ApimEventProcessor
             messagesLink.BucketKey = _BucketKey;
             messagesLink.RunscopeMessage = runscopeMessage;
             var runscopeResponse = await _HttpClient.SendAsync(messagesLink.CreateRequest());
-            _Logger.LogDebug("Message forwarded to Runscope");
+            if (runscopeResponse.IsSuccessStatusCode)
+            {
+                _Logger.LogDebug("Message forwarded to Runscope");
+            } else
+            {
+                _Logger.LogDebug("Failed to send request");
+            }
         }
     }
 }

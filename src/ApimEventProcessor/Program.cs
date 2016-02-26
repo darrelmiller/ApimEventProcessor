@@ -9,10 +9,10 @@ namespace ApimEventProcessor
         static void Main(string[] args)
         {
             
-            string eventHubConnectionString = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-CONNECTIONSTRING", EnvironmentVariableTarget.User); 
-            string eventHubName = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-NAME", EnvironmentVariableTarget.User); 
-            string storageAccountName = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-NAME", EnvironmentVariableTarget.User); 
-            string storageAccountKey = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-KEY", EnvironmentVariableTarget.User);
+            string eventHubConnectionString = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-CONNECTIONSTRING", EnvironmentVariableTarget.Process); 
+            string eventHubName = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-NAME", EnvironmentVariableTarget.Process); 
+            string storageAccountName = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-NAME", EnvironmentVariableTarget.Process); 
+            string storageAccountKey = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-KEY", EnvironmentVariableTarget.Process);
 
             string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
                 storageAccountName, storageAccountKey);
