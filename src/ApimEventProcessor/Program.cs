@@ -14,8 +14,8 @@ namespace ApimEventProcessor
             string storageAccountName = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-NAME", EnvironmentVariableTarget.Process); 
             string storageAccountKey = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-KEY", EnvironmentVariableTarget.Process);
 
-            string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                storageAccountName, storageAccountKey);
+            string storageConnectionString =
+                $"DefaultEndpointsProtocol=https;AccountName={storageAccountName};AccountKey={storageAccountKey}";
 
             string eventProcessorHostName = Guid.NewGuid().ToString();
             var eventProcessorHost = new EventProcessorHost(
