@@ -78,6 +78,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net.Http.Formatting, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Runtime.Serialization" />
@@ -95,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApimEventProcessor.cs" />
+    <Compile Include="ApimHttpEventProcessorFactory.cs" />
     <Compile Include="ConsoleLogger.cs" />
     <Compile Include="HttpMessage.cs" />
     <Compile Include="IHttpMessageProcessor.cs" />

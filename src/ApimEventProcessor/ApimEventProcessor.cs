@@ -8,39 +8,18 @@ using System.Threading.Tasks;
 namespace ApimEventProcessor
 {
     /// <summary>
-    ///  Allows the EventProcessor instances to have services injected into the constructor
-    /// </summary>
-    public class ApimHttpEventProcessorFactory : IEventProcessorFactory
-    {
-        private IHttpMessageProcessor _HttpMessageProcessor;
-        private ILogger _Logger;
-
-        public ApimHttpEventProcessorFactory(IHttpMessageProcessor httpMessageProcessor, ILogger logger)
-        {
-            _HttpMessageProcessor = httpMessageProcessor;
-            _Logger = logger;
-        }
-
-        public IEventProcessor CreateEventProcessor(PartitionContext context)
-        {
-            return new ApimEventProcessor(_HttpMessageProcessor, _Logger);
-        }
-    }
-  
-  
-    /// <summary>
     /// Accepts EventData from EventHubs, converts to a HttpMessage instances and forwards it to a IHttpMessageProcessor
     /// </summary>
     public class ApimEventProcessor : IEventProcessor
     {
-        Stopwatch checkpointStopWatch;
-        private ILogger _Logger;
-        private IHttpMessageProcessor _MessageContentProcessor;
+        private Stopwatch checkpointStopWatch;
+        private readonly ILogger logger;
+        private readonly IHttpMessageProcessor messageContentProcessor;
 
         public ApimEventProcessor(IHttpMessageProcessor messageContentProcessor, ILogger logger)
         {
-            _MessageContentProcessor = messageContentProcessor;
-            _Logger = logger;
+            this.messageContentProcessor = messageContentProcessor;
+            this.logger = logger;
         }
 
   
@@ -49,33 +28,31 @@ namespace ApimEventProcessor
 
             foreach (EventData eventData in messages)
             {
-                _Logger.LogInfo(string.Format("Event received from partition: {0} - {1}", context.Lease.PartitionId,eventData.PartitionKey));
+                logger.LogInfo($"Event received from partition: {context.Lease.PartitionId} - {eventData.PartitionKey}");
 
                 try
                 {
                     var httpMessage = HttpMessage.Parse(eventData.GetBodyStream());
-                    await _MessageContentProcessor.ProcessHttpMessage(httpMessage);
+                    await messageContentProcessor.ProcessHttpMessage(httpMessage);
                 }
                 catch (Exception ex)
                 {
-                    _Logger.LogError(ex.Message);
+                    logger.LogError(ex.Message);
                 }
             }
 
             //Call checkpoint every 5 minutes, so that worker can resume processing from the 5 minutes back if it restarts.
             if (this.checkpointStopWatch.Elapsed > TimeSpan.FromMinutes(5))
             {
-                _Logger.LogInfo("Checkpointing");
-               await context.CheckpointAsync();
+                logger.LogInfo("Checkpointing");
+                await context.CheckpointAsync();
                 this.checkpointStopWatch.Restart();
             }
         }
 
-
-
         async Task IEventProcessor.CloseAsync(PartitionContext context, CloseReason reason)
         {
-            _Logger.LogInfo("Processor Shutting Down. Partition '{0}', Reason: '{1}'.", context.Lease.PartitionId, reason);
+            logger.LogInfo("Processor Shutting Down. Partition '{0}', Reason: '{1}'.", context.Lease.PartitionId, reason);
             if (reason == CloseReason.Shutdown)
             {
                 await context.CheckpointAsync();
@@ -84,14 +61,10 @@ namespace ApimEventProcessor
 
         Task IEventProcessor.OpenAsync(PartitionContext context)
         {
-            _Logger.LogInfo("SimpleEventProcessor initialized.  Partition: '{0}', Offset: '{1}'", context.Lease.PartitionId, context.Lease.Offset);
+            logger.LogInfo("SimpleEventProcessor initialized.  Partition: '{0}', Offset: '{1}'", context.Lease.PartitionId, context.Lease.Offset);
             this.checkpointStopWatch = new Stopwatch();
             this.checkpointStopWatch.Start();
             return Task.FromResult<object>(null);
         }
-
     }
-
-
-
 }

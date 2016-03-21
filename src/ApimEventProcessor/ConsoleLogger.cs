@@ -6,29 +6,28 @@ namespace ApimEventProcessor
 
     public class ConsoleLogger : ILogger
     {
-        private LogLevel _LogLevel;
-        private readonly object _writerLock = new object();
-
+        private readonly LogLevel logLevel;
+        private readonly object writerLock = new object();
 
         public ConsoleLogger(LogLevel logLevel = LogLevel.Info)
         {
-            _LogLevel = logLevel;
+            this.logLevel = logLevel;
         }
         public void LogDebug(string message, params object[] parameters)
         {
-            if (_LogLevel > LogLevel.Debug) return;
+            if (logLevel > LogLevel.Debug) return;
             WriteLine(ConsoleColor.Green, message, parameters);
         }
      
         public void LogInfo(string message, params object[] parameters)
         {
-            if (_LogLevel > LogLevel.Info) return;
+            if (logLevel > LogLevel.Info) return;
             WriteLine(ConsoleColor.Yellow, message, parameters);
         }
 
         public void LogWarning(string message, params object[] parameters)
         {
-            if (_LogLevel > LogLevel.Warning) return;
+            if (logLevel > LogLevel.Warning) return;
             WriteLine(ConsoleColor.Blue, message, parameters);
         }
 
@@ -39,7 +38,7 @@ namespace ApimEventProcessor
 
         private void WriteLine(ConsoleColor color, string message, object[] parameters)
         {
-            lock (_writerLock)
+            lock (writerLock)
             {
                 var currentColor = Console.ForegroundColor;
                 try
