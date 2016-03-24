@@ -28,6 +28,7 @@ namespace ApimEventProcessor
         {
             var runscopeMessage = new RunscopeMessage()
             {
+                BucketKey = bucketKey,
                 UniqueIdentifier = message.MessageId
             };
 
@@ -38,13 +39,17 @@ namespace ApimEventProcessor
             }
             else
             {
-                logger.LogInfo("Processing HTTP response " + message.MessageId.ToString());
+                logger.LogWarning("Processing HTTP response " + message.MessageId.ToString());
                 runscopeMessage.Response = await RunscopeResponse.CreateFromAsync(message.HttpResponseMessage);
             }
 
-            var messagesLink = new MessagesLink() { Method = HttpMethod.Post };
-            messagesLink.BucketKey = bucketKey;
-            messagesLink.RunscopeMessage = runscopeMessage;
+            var messagesLink = new MessagesLink
+            {
+                Method = HttpMethod.Post,
+                BucketKey = bucketKey,
+                RunscopeMessage = runscopeMessage
+            };
+
             var runscopeResponse = await httpClient.SendAsync(messagesLink.CreateRequest());
             if (runscopeResponse.IsSuccessStatusCode)
             {

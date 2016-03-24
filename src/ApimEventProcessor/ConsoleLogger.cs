@@ -13,6 +13,7 @@ namespace ApimEventProcessor
         {
             this.logLevel = logLevel;
         }
+
         public void LogDebug(string message, params object[] parameters)
         {
             if (logLevel > LogLevel.Debug) return;

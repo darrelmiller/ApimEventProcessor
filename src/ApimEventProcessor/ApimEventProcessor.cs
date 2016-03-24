@@ -21,18 +21,17 @@ namespace ApimEventProcessor
             this.messageContentProcessor = messageContentProcessor;
             this.logger = logger;
         }
-
   
         async Task IEventProcessor.ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
         {
 
             foreach (EventData eventData in messages)
             {
-                logger.LogInfo($"Event received from partition: {context.Lease.PartitionId} - {eventData.PartitionKey}");
+                logger.LogInfo($"Event received from partition: {context.Lease.PartitionId} - {eventData.SequenceNumber}");
 
                 try
                 {
-                    var httpMessage = HttpMessage.Parse(eventData.GetBodyStream());
+                    var httpMessage = await HttpMessage.Parse(eventData.GetBodyStream());
                     await messageContentProcessor.ProcessHttpMessage(httpMessage);
                 }
                 catch (Exception ex)
@@ -44,7 +43,7 @@ namespace ApimEventProcessor
             //Call checkpoint every 5 minutes, so that worker can resume processing from the 5 minutes back if it restarts.
             if (this.checkpointStopWatch.Elapsed > TimeSpan.FromMinutes(5))
             {
-                logger.LogInfo("Checkpointing");
+                logger.LogWarning("Checkpointing");
                 await context.CheckpointAsync();
                 this.checkpointStopWatch.Restart();
             }

@@ -26,7 +26,7 @@ namespace ApimEventProcessor
                                                 eventHubConnectionString,
                                                 storageConnectionString);
 
-            var logger = new ConsoleLogger(LogLevel.Debug);
+            var logger = new ConsoleLogger(LogLevel.Info);
             logger.LogDebug("Registering EventProcessor...");
 
             var httpMessageProcessor = new RunscopeHttpMessageProcessor(new HttpClient(), logger);
