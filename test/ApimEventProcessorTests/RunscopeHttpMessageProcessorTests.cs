@@ -48,7 +48,9 @@ namespace ApimEventProcessorTests
     public class FakeMessageHandler : DelegatingHandler
     {
         public HttpResponseMessage LastResponseMessage { get; set; }
+#pragma warning disable 1998
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+#pragma warning restore 1998
         {
             LastResponseMessage = new HttpResponseMessage()
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using Microsoft.ServiceBus.Messaging;
 using System.Net.Http;
 
@@ -8,16 +9,16 @@ namespace ApimEventProcessor
     {
         static void Main(string[] args)
         {
-            
-            string eventHubConnectionString = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-CONNECTIONSTRING", EnvironmentVariableTarget.Process); 
-            string eventHubName = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-NAME", EnvironmentVariableTarget.Process); 
-            string storageAccountName = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-NAME", EnvironmentVariableTarget.Process); 
-            string storageAccountKey = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-KEY", EnvironmentVariableTarget.Process);
+            //var eventHubConnectionString = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-CONNECTIONSTRING", EnvironmentVariableTarget.Process); 
+            //var eventHubName = Environment.GetEnvironmentVariable("APIMEVENTS-EVENTHUB-NAME", EnvironmentVariableTarget.Process); 
+            //var storageAccountName = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-NAME", EnvironmentVariableTarget.Process); 
+            //var storageAccountKey = Environment.GetEnvironmentVariable("APIMEVENTS-STORAGEACCOUNT-KEY", EnvironmentVariableTarget.Process);
 
-            string storageConnectionString = string.Format("DefaultEndpointsProtocol=https;AccountName={0};AccountKey={1}",
-                storageAccountName, storageAccountKey);
+            var eventHubConnectionString = ConfigurationManager.AppSettings.Get("APIMEVENTS-EVENTHUB-CONNECTIONSTRING");
+            var eventHubName = ConfigurationManager.AppSettings.Get("APIMEVENTS-EVENTHUB-NAME");
+            var storageConnectionString = ConfigurationManager.AppSettings.Get("APIMEVENTS-STORAGEACCOUNT-CONNECTIONSTRING");
 
-            string eventProcessorHostName = Guid.NewGuid().ToString();
+            var eventProcessorHostName = Guid.NewGuid().ToString();
             var eventProcessorHost = new EventProcessorHost(
                                                 eventProcessorHostName,
                                                 eventHubName,
@@ -25,8 +26,7 @@ namespace ApimEventProcessor
                                                 eventHubConnectionString,
                                                 storageConnectionString);
 
-
-            var logger = new ConsoleLogger(LogLevel.Debug);
+            var logger = new ConsoleLogger(LogLevel.Info);
             logger.LogDebug("Registering EventProcessor...");
 
             var httpMessageProcessor = new RunscopeHttpMessageProcessor(new HttpClient(), logger);
@@ -38,11 +38,5 @@ namespace ApimEventProcessor
             Console.ReadLine();
             eventProcessorHost.UnregisterEventProcessorAsync().Wait();
         }
-
-      
-        
     }
-
- 
-
 }

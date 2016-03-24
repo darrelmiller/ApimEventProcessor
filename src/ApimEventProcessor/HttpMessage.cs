@@ -3,6 +3,7 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ApimEventProcessor
 {
@@ -21,15 +22,15 @@ namespace ApimEventProcessor
         public HttpResponseMessage HttpResponseMessage { get; set; }
 
 
-        public static HttpMessage Parse(Stream stream)
+        public static async Task<HttpMessage> Parse(Stream stream)
         {
             using (var sr = new StreamReader(stream))
             {
-                return Parse(sr.ReadToEnd());
+                return await Parse(sr.ReadToEnd());
             }
         }
 
-        public static HttpMessage Parse(string data)
+        public static async Task<HttpMessage> Parse(string data)
         {
             var httpMessage = new HttpMessage();
 
@@ -45,7 +46,12 @@ namespace ApimEventProcessor
                     throw new ArgumentException("Invalid formatted event :" + data);
                 }
                 httpMessage.IsRequest = firstLine[0] == "request";
-                httpMessage.MessageId = Guid.Parse(firstLine[1]);
+
+                Guid id;
+                if (Guid.TryParseExact(firstLine[1], "D", out id))
+                {
+                    httpMessage.MessageId = id;
+                }
 
                 var stream = new MemoryStream(Encoding.UTF8.GetBytes(sr.ReadToEnd()));
                 stream.Position = 0;
@@ -61,12 +67,12 @@ namespace ApimEventProcessor
                 
                 // Using .Result isn't too evil because content is a locally buffered memory stream
                 // Although if this were hosted in a System.Web based ASP.NET host it might block
-                httpMessage.HttpRequestMessage = content.ReadAsHttpRequestMessageAsync().Result;  
+                httpMessage.HttpRequestMessage = await content.ReadAsHttpRequestMessageAsync();  
             }
             else
             {
                 contentType.Parameters.Add(new NameValueHeaderValue("msgtype", "response"));
-                httpMessage.HttpResponseMessage = content.ReadAsHttpResponseMessageAsync().Result;
+                httpMessage.HttpResponseMessage = await content.ReadAsHttpResponseMessageAsync();
             }
             return httpMessage;
         }
