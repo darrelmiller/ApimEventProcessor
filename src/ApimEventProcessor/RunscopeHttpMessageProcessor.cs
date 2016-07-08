@@ -2,6 +2,7 @@ using Runscope.Links;
 using Runscope.Messages;
 using System;
 using System.Configuration;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -32,16 +33,16 @@ namespace ApimEventProcessor
                 UniqueIdentifier = message.MessageId
             };
 
-            if (message.IsRequest)
-            {
-                logger.LogInfo("Processing HTTP request " + message.MessageId.ToString());
+            //if (message.IsRequest)
+            //{
+            //    logger.LogInfo("Processing HTTP request " + message.MessageId.ToString());
                 runscopeMessage.Request = await RunscopeRequest.CreateFromAsync(message.HttpRequestMessage);
-            }
-            else
-            {
-                logger.LogWarning("Processing HTTP response " + message.MessageId.ToString());
+            //}
+            //else
+            //{
+            //    logger.LogWarning("Processing HTTP response " + message.MessageId.ToString());
                 runscopeMessage.Response = await RunscopeResponse.CreateFromAsync(message.HttpResponseMessage);
-            }
+            //}
 
             var messagesLink = new MessagesLink
             {
@@ -54,7 +55,8 @@ namespace ApimEventProcessor
             if (runscopeResponse.IsSuccessStatusCode)
             {
                 logger.LogDebug("Message forwarded to Runscope");
-            } else
+            }
+            else
             {
                 logger.LogDebug("Failed to send request");
             }

@@ -30,9 +30,10 @@ namespace ApimEventProcessor
             logger.LogDebug("Registering EventProcessor...");
 
             var httpMessageProcessor = new RunscopeHttpMessageProcessor(new HttpClient(), logger);
+            var messageFilter = new ApiMessageFilter();
 
             eventProcessorHost.RegisterEventProcessorFactoryAsync(
-                new ApimHttpEventProcessorFactory(httpMessageProcessor, logger));
+                new ApimHttpEventProcessorFactory(httpMessageProcessor, logger, messageFilter));
             
             Console.WriteLine("Receiving. Press enter key to stop worker.");
             Console.ReadLine();

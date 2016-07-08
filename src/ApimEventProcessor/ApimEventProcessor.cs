@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
 using System.Threading.Tasks;
 
 namespace ApimEventProcessor
@@ -14,25 +13,46 @@ namespace ApimEventProcessor
     {
         private Stopwatch checkpointStopWatch;
         private readonly ILogger logger;
+        private readonly IMessageFilter messageFilter;
         private readonly IHttpMessageProcessor messageContentProcessor;
+        private readonly Dictionary<Guid, HttpMessage> requestMessages = new Dictionary<Guid, HttpMessage>();
 
-        public ApimEventProcessor(IHttpMessageProcessor messageContentProcessor, ILogger logger)
+        public ApimEventProcessor(IHttpMessageProcessor messageContentProcessor, ILogger logger, IMessageFilter messageFilter)
         {
             this.messageContentProcessor = messageContentProcessor;
             this.logger = logger;
+            this.messageFilter = messageFilter;
         }
-  
+
         async Task IEventProcessor.ProcessEventsAsync(PartitionContext context, IEnumerable<EventData> messages)
         {
-
             foreach (EventData eventData in messages)
             {
-                logger.LogInfo($"Event received from partition: {context.Lease.PartitionId} - {eventData.SequenceNumber}");
+                //logger.LogInfo($"Event received from partition: {context.Lease.PartitionId} - {eventData.SequenceNumber}");
 
                 try
                 {
                     var httpMessage = await HttpMessage.Parse(eventData.GetBodyStream());
-                    await messageContentProcessor.ProcessHttpMessage(httpMessage);
+
+                    if (httpMessage.IsRequest)
+                    {
+                        requestMessages.Add(httpMessage.MessageId, httpMessage);
+                    }
+                    else
+                    {
+                        HttpMessage requestMessage;
+                        if (requestMessages.TryGetValue(httpMessage.MessageId, out requestMessage))
+                        {
+                            requestMessages.Remove(httpMessage.MessageId);
+                            httpMessage.HttpRequestMessage = requestMessage.HttpRequestMessage;
+
+                            if (messageFilter.ShouldProcess(httpMessage))
+                            {
+                                await messageContentProcessor.ProcessHttpMessage(httpMessage);
+                                logger.LogInfo("Processed: " + httpMessage.HttpRequestMessage.RequestUri);
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -40,10 +60,11 @@ namespace ApimEventProcessor
                 }
             }
 
-            //Call checkpoint every 5 minutes, so that worker can resume processing from the 5 minutes back if it restarts.
-            if (this.checkpointStopWatch.Elapsed > TimeSpan.FromMinutes(5))
+            //Call checkpoint every 1 minute, so that worker can resume processing from the 1 minutes back if it restarts.
+            if (this.checkpointStopWatch.Elapsed > TimeSpan.FromMinutes(1))
             {
-                logger.LogWarning("Checkpointing");
+                logger.LogInfo("Checkpointing");
+                logger.LogInfo($"Cache size is: {requestMessages.Count}");
                 await context.CheckpointAsync();
                 this.checkpointStopWatch.Restart();
             }
@@ -60,7 +81,7 @@ namespace ApimEventProcessor
 
         Task IEventProcessor.OpenAsync(PartitionContext context)
         {
-            logger.LogInfo("SimpleEventProcessor initialized.  Partition: '{0}', Offset: '{1}'", context.Lease.PartitionId, context.Lease.Offset);
+            logger.LogDebug("SimpleEventProcessor initialized.  Partition: '{0}', Offset: '{1}'", context.Lease.PartitionId, context.Lease.Offset);
             this.checkpointStopWatch = new Stopwatch();
             this.checkpointStopWatch.Start();
             return Task.FromResult<object>(null);

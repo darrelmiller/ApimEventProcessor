@@ -64,9 +64,6 @@ namespace ApimEventProcessor
             if (httpMessage.IsRequest)
             {
                 contentType.Parameters.Add(new NameValueHeaderValue("msgtype", "request"));
-                
-                // Using .Result isn't too evil because content is a locally buffered memory stream
-                // Although if this were hosted in a System.Web based ASP.NET host it might block
                 httpMessage.HttpRequestMessage = await content.ReadAsHttpRequestMessageAsync();  
             }
             else

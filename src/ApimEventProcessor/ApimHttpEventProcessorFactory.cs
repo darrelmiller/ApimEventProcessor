@@ -9,16 +9,18 @@ namespace ApimEventProcessor
     {
         private readonly IHttpMessageProcessor httpMessageProcessor;
         private readonly ILogger logger;
+        private readonly IMessageFilter messageFilter;
 
-        public ApimHttpEventProcessorFactory(IHttpMessageProcessor httpMessageProcessor, ILogger logger)
+        public ApimHttpEventProcessorFactory(IHttpMessageProcessor httpMessageProcessor, ILogger logger, IMessageFilter messageFilter)
         {
             this.httpMessageProcessor = httpMessageProcessor;
             this.logger = logger;
+            this.messageFilter = messageFilter;
         }
 
         public IEventProcessor CreateEventProcessor(PartitionContext context)
         {
-            return new ApimEventProcessor(httpMessageProcessor, logger);
+            return new ApimEventProcessor(httpMessageProcessor, logger, messageFilter);
         }
     }
 }
